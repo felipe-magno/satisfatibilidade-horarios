@@ -1,0 +1,32 @@
+from z3 import *
+
+k = 4
+m = 3
+
+P = [(1, 2), (2, 3), (2, 4), (3, 4)]
+
+solver = Solver()
+
+x = [[Bool(f"x_{c}_{s}") for s in range(m)] for c in range(k)]
+
+for c in range(k):
+    solver.add(Or(x[c]))
+
+for c in range(k):
+    for s1 in range(m):
+        for s2 in range(s1+1, m):
+            solver.add(Implies(x[c][s1], Not(x[c][s2])))
+
+for c1, c2 in P:
+    for slot in range(m):
+        solver.add(Implies(x[c1-1][slot], Not(x[c2-1][slot])))
+
+if solver.check() == sat:
+    print("É possível agendar os minicursos.")
+    model = solver.model()
+    for c in range(k):
+        for slot in range(m):
+            if is_true(model[x[c][slot]]):
+                print(f"O curso {c+1} será ofertado no slot {slot+1}.")
+else:
+    print("Não é possível agendar os minicursos.")
